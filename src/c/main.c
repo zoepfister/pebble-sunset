@@ -318,6 +318,54 @@ static void draw_center_disc(GContext *ctx) {
 }
 
 // ============================================================================
+// Outlined text helper
+//
+// Draws text with a 1px dark outline by rendering 8 offset copies in the
+// outline colour, then the foreground on top.
+// ============================================================================
+
+#define OUTLINE_OFFSET 1
+
+static const int8_t s_outline_dx[] = { -1,  0,  1, -1, 1, -1, 0, 1 };
+static const int8_t s_outline_dy[] = { -1, -1, -1,  0, 0,  1, 1, 1 };
+
+static void draw_outlined_text(GContext *ctx, const char *text, GFont font,
+                               GRect box, GColor fg, GColor outline) {
+    for (int i = 0; i < 8; i++) {
+        GRect offset_box = GRect(
+            box.origin.x + s_outline_dx[i] * OUTLINE_OFFSET,
+            box.origin.y + s_outline_dy[i] * OUTLINE_OFFSET,
+            box.size.w, box.size.h);
+        graphics_context_set_text_color(ctx, outline);
+        graphics_draw_text(ctx, text, font, offset_box,
+                           GTextOverflowModeTrailingEllipsis,
+                           GTextAlignmentCenter, NULL);
+    }
+    graphics_context_set_text_color(ctx, fg);
+    graphics_draw_text(ctx, text, font, box,
+                       GTextOverflowModeTrailingEllipsis,
+                       GTextAlignmentCenter, NULL);
+}
+
+// ============================================================================
+// Outlined line helper
+//
+// Draws a line with a dark border: a wider black stroke underneath,
+// then the foreground stroke on top.
+// ============================================================================
+
+static void draw_outlined_line(GContext *ctx, GPoint a, GPoint b,
+                               int width, GColor fg, GColor outline) {
+    graphics_context_set_stroke_color(ctx, outline);
+    graphics_context_set_stroke_width(ctx, width + OUTLINE_OFFSET * 2);
+    graphics_draw_line(ctx, a, b);
+
+    graphics_context_set_stroke_color(ctx, fg);
+    graphics_context_set_stroke_width(ctx, width);
+    graphics_draw_line(ctx, a, b);
+}
+
+// ============================================================================
 // 24-hour tick marks and hour numbers around the dial edge
 // ============================================================================
 
@@ -332,9 +380,8 @@ static void draw_hour_markers(GContext *ctx) {
         GPoint tick_inner = point_on_circle(angle, inner_r);
         GPoint tick_outer = point_on_circle(angle, TICK_OUTER_RADIUS);
 
-        graphics_context_set_stroke_color(ctx, GColorWhite);
-        graphics_context_set_stroke_width(ctx, is_even ? 2 : 1);
-        graphics_draw_line(ctx, tick_inner, tick_outer);
+        draw_outlined_line(ctx, tick_inner, tick_outer,
+                           is_even ? 2 : 1, GColorWhite, GColorBlack);
 
         if (is_even) {
             int display_hour = (hour == 0) ? 24 : hour;
@@ -348,10 +395,8 @@ static void draw_hour_markers(GContext *ctx) {
                 HOUR_LABEL_HALF_W * 2,
                 HOUR_LABEL_HALF_H * 2);
 
-            graphics_context_set_text_color(ctx, GColorWhite);
-            graphics_draw_text(ctx, label, number_font, label_box,
-                               GTextOverflowModeTrailingEllipsis,
-                               GTextAlignmentCenter, NULL);
+            draw_outlined_text(ctx, label, number_font, label_box,
+                               GColorWhite, GColorBlack);
         }
     }
 }
@@ -370,7 +415,6 @@ static void draw_15_minute_markers(GContext *ctx) {
         graphics_context_set_stroke_color(ctx, GColorWhite);
         graphics_context_set_stroke_width(ctx, 1);
         graphics_draw_line(ctx, tick_inner, tick_outer);
-
     }
 }
 
