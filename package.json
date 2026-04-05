@@ -1,0 +1,29 @@
+{
+  "name": "solar-24h",
+  "author": "Pebble Dev",
+  "version": "1.0.0",
+  "keywords": ["pebble-app"],
+  "private": true,
+  "dependencies": {},
+  "pebble": {
+    "displayName": "Solar 24H",
+    "uuid": "0aa92097-af58-49c1-8c6c-b97ce84d98ab",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": ["gabbro"],
+    "capabilities": ["location"],
+    "messageKeys": [
+      "SUNRISE_HOUR",
+      "SUNRISE_MIN",
+      "SUNSET_HOUR",
+      "SUNSET_MIN",
+      "REQUEST_SUN_DATA"
+    ],
+    "watchapp": {
+      "watchface": true
+    },
+    "resources": {
+      "media": []
+    }
+  }
+}

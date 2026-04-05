@@ -1,0 +1,41 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnail cache files
+._*
+
+# Spotlight files
+.Spotlight-V100
+.Trashes
+
+# macOS system files
+.DocumentRevisions-V100
+.fseventsd
+.TemporaryItems
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Pebble build artifacts
+build/
+build_generated/
+wscript_build/
+.pbw
+*.pbw
+*.elf
+*.bin
+*.pbpack
+*.aplite
+*.basalt
+*.chalk
+
+# Node.js artifacts (common for Pebble JS)
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Editor/IDE and other dev files
+.idea/
+.vscode/
+*.swp
