@@ -23,14 +23,69 @@
 //   ▼  ▼  ▼      ▼  ▼
 // ============================================================================
 
+#define PBL_ROUND 1
+
+#ifdef PBL_ROUND
+#define HOUR_NUMBER_RADIUS     107
+#define TICK_OUTER_RADIUS      130
+#define TICK_INNER_EVEN_RADIUS  120
+#define TICK_INNER_ODD_RADIUS  125
+#define SKY_DISC_INSET          0
+#define SUN_DOT_ORBIT_RADIUS    80
+#define SUN_DOT_RADIUS           7
+#define CENTER_DISC_RADIUS      57
+
+#else
 #define HOUR_NUMBER_RADIUS     85
 #define TICK_OUTER_RADIUS      109
 #define TICK_INNER_EVEN_RADIUS  99
 #define TICK_INNER_ODD_RADIUS  104
-#define SKY_DISC_INSET          22   // from each edge → outer radius ≈ 108
+#define SKY_DISC_INSET          0
 #define SUN_DOT_ORBIT_RADIUS    76
 #define SUN_DOT_RADIUS           9
 #define CENTER_DISC_RADIUS      48
+
+#endif
+
+// Sun/moon indicator ring sizes (offsets from SUN_DOT_RADIUS)
+#define SUN_GLOW_EXTRA          2
+#define SUN_CORE_INSET          4
+#define MOON_OUTER_INSET        2
+#define MOON_INNER_INSET        5
+
+// Centre disc inner ring inset
+#define CENTER_DISC_INNER_INSET 0
+// Hand base starts just outside the centre disc
+#define HAND_BASE_GAP           2
+
+// Hour-label bounding box (half-width/half-height)
+#define HOUR_LABEL_HALF_W      16
+#define HOUR_LABEL_HALF_H      12
+
+// Sky-layer timing thresholds (minutes)
+#define TWILIGHT_DURATION       75
+#define CLEAR_SKY_INSET         45
+#define GOLDEN_HOUR_INNER       12
+#define GOLDEN_HOUR_OUTER       45
+#define HORIZON_GLOW_INNER      12
+#define HORIZON_GLOW_OUTER      18
+#define MIN_DAY_FOR_GOLDEN_HOUR  90
+#define MIN_DAY_FOR_CLEAR_SKY   120
+#define MIN_DAY_FOR_BRIGHT_SKY  180
+#define MIN_DAY_FOR_NOON_ZENITH 240
+
+// Digital clock layout (pixels)
+#define TIME_FONT_HEIGHT        42
+#define TIME_LAYER_HEIGHT       50
+#define TIME_Y_OFFSET           26
+#define INFO_Y_GAP              48
+#define INFO_LAYER_HEIGHT       20
+#define DATE_LAYER_HEIGHT       20
+#define DATE_Y_OFFSET           12
+
+// AppMessage buffer sizes
+#define APPMSG_INBOX_SIZE      256
+#define APPMSG_OUTBOX_SIZE      64
 
 // ============================================================================
 // Global state
@@ -40,6 +95,7 @@ static Window    *s_main_window;
 static Layer     *s_canvas_layer;
 static TextLayer *s_time_layer;
 static TextLayer *s_sunrise_sunset_layer;
+static TextLayer *s_date_layer;
 
 // Sunrise / sunset stored as minutes since midnight (0–1439).
 // Defaults to 06:00 / 18:00 until the phone sends real GPS data.
@@ -137,14 +193,14 @@ static void draw_sky(GContext *ctx, GRect bounds) {
     graphics_fill_radial(ctx, disc, GOvalScaleModeFitCircle,
                          fill, 0, TRIG_MAX_ANGLE);
 
-    // 2. Twilight — 75 minutes before sunrise & after sunset
+    // 2. Twilight band before sunrise & after sunset
     graphics_context_set_fill_color(ctx, GColorDukeBlue);
     fill_radial_wrapped(ctx, disc, fill,
-                        minutes_to_angle(rise - 75),
+                        minutes_to_angle(rise - TWILIGHT_DURATION),
                         minutes_to_angle(rise));
     fill_radial_wrapped(ctx, disc, fill,
                         minutes_to_angle(set),
-                        minutes_to_angle(set + 75));
+                        minutes_to_angle(set + TWILIGHT_DURATION));
 
     // 3. Daylight base — sunrise to sunset
     graphics_context_set_fill_color(ctx, GColorCobaltBlue);
@@ -152,16 +208,16 @@ static void draw_sky(GContext *ctx, GRect bounds) {
                         minutes_to_angle(rise),
                         minutes_to_angle(set));
 
-    // 4. Clear sky — inset 45 min from each edge
-    if (day_length > 120) {
+    // 4. Clear sky — inset from each edge
+    if (day_length > MIN_DAY_FOR_CLEAR_SKY) {
         graphics_context_set_fill_color(ctx, GColorVividCerulean);
         fill_radial_wrapped(ctx, disc, fill,
-                            minutes_to_angle(rise + 45),
-                            minutes_to_angle(set  - 45));
+                            minutes_to_angle(rise + CLEAR_SKY_INSET),
+                            minutes_to_angle(set  - CLEAR_SKY_INSET));
     }
 
     // 5. Bright sky — middle third of daylight
-    if (day_length > 180) {
+    if (day_length > MIN_DAY_FOR_BRIGHT_SKY) {
         int third = day_length / 3;
         graphics_context_set_fill_color(ctx, GColorPictonBlue);
         fill_radial_wrapped(ctx, disc, fill,
@@ -170,7 +226,7 @@ static void draw_sky(GContext *ctx, GRect bounds) {
     }
 
     // 6. Noon zenith — middle seventh of daylight
-    if (day_length > 240) {
+    if (day_length > MIN_DAY_FOR_NOON_ZENITH) {
         int seventh = day_length / 7;
         graphics_context_set_fill_color(ctx, GColorCeleste);
         fill_radial_wrapped(ctx, disc, fill,
@@ -179,24 +235,24 @@ static void draw_sky(GContext *ctx, GRect bounds) {
     }
 
     // 7. Golden hour — warm orange near sunrise/sunset
-    if (day_length > 90) {
+    if (day_length > MIN_DAY_FOR_GOLDEN_HOUR) {
         graphics_context_set_fill_color(ctx, GColorOrange);
         fill_radial_wrapped(ctx, disc, fill,
-                            minutes_to_angle(rise + 12),
-                            minutes_to_angle(rise + 45));
+                            minutes_to_angle(rise + GOLDEN_HOUR_INNER),
+                            minutes_to_angle(rise + GOLDEN_HOUR_OUTER));
         fill_radial_wrapped(ctx, disc, fill,
-                            minutes_to_angle(set  - 45),
-                            minutes_to_angle(set  - 12));
+                            minutes_to_angle(set  - GOLDEN_HOUR_OUTER),
+                            minutes_to_angle(set  - GOLDEN_HOUR_INNER));
     }
 
     // 8. Horizon glow — bright warm band right at sunrise/sunset
     graphics_context_set_fill_color(ctx, GColorChromeYellow);
     fill_radial_wrapped(ctx, disc, fill,
-                        minutes_to_angle(rise - 12),
-                        minutes_to_angle(rise + 18));
+                        minutes_to_angle(rise - HORIZON_GLOW_INNER),
+                        minutes_to_angle(rise + HORIZON_GLOW_OUTER));
     fill_radial_wrapped(ctx, disc, fill,
-                        minutes_to_angle(set  - 18),
-                        minutes_to_angle(set  + 12));
+                        minutes_to_angle(set  - HORIZON_GLOW_OUTER),
+                        minutes_to_angle(set  + HORIZON_GLOW_INNER));
 
     // Thin border around the sky disc
     graphics_context_set_stroke_color(ctx, GColorDarkGray);
@@ -219,16 +275,16 @@ static void draw_sun_or_moon(GContext *ctx) {
 
     if (is_daytime) {
         graphics_context_set_fill_color(ctx, GColorYellow);
-        graphics_fill_circle(ctx, position, SUN_DOT_RADIUS + 2);
+        graphics_fill_circle(ctx, position, SUN_DOT_RADIUS + SUN_GLOW_EXTRA);
         graphics_context_set_fill_color(ctx, GColorPastelYellow);
         graphics_fill_circle(ctx, position, SUN_DOT_RADIUS);
         graphics_context_set_fill_color(ctx, GColorWhite);
-        graphics_fill_circle(ctx, position, SUN_DOT_RADIUS - 4);
+        graphics_fill_circle(ctx, position, SUN_DOT_RADIUS - SUN_CORE_INSET);
     } else {
         graphics_context_set_fill_color(ctx, GColorLightGray);
-        graphics_fill_circle(ctx, position, SUN_DOT_RADIUS - 2);
+        graphics_fill_circle(ctx, position, SUN_DOT_RADIUS - MOON_OUTER_INSET);
         graphics_context_set_fill_color(ctx, GColorDarkGray);
-        graphics_fill_circle(ctx, position, SUN_DOT_RADIUS - 5);
+        graphics_fill_circle(ctx, position, SUN_DOT_RADIUS - MOON_INNER_INSET);
     }
 }
 
@@ -239,7 +295,7 @@ static void draw_sun_or_moon(GContext *ctx) {
 static void draw_time_hand(GContext *ctx) {
     int32_t angle = minutes_to_angle(current_time_in_minutes());
     GPoint  tip   = point_on_circle(angle, TICK_OUTER_RADIUS);
-    GPoint  base  = point_on_circle(angle, CENTER_DISC_RADIUS + 2);
+    GPoint  base  = point_on_circle(angle, CENTER_DISC_RADIUS + HAND_BASE_GAP);
 
     graphics_context_set_stroke_color(ctx, GColorWhite);
     graphics_context_set_stroke_width(ctx, 2);
@@ -254,7 +310,7 @@ static void draw_center_disc(GContext *ctx) {
     graphics_context_set_fill_color(ctx, GColorOxfordBlue);
     graphics_fill_circle(ctx, s_center, CENTER_DISC_RADIUS);
     graphics_context_set_fill_color(ctx, GColorBlack);
-    graphics_fill_circle(ctx, s_center, CENTER_DISC_RADIUS - 3);
+    graphics_fill_circle(ctx, s_center, CENTER_DISC_RADIUS - CENTER_DISC_INNER_INSET);
 
     graphics_context_set_stroke_color(ctx, GColorDarkGray);
     graphics_context_set_stroke_width(ctx, 1);
@@ -286,8 +342,11 @@ static void draw_hour_markers(GContext *ctx) {
             snprintf(label, sizeof(label), "%d", display_hour);
 
             GPoint label_centre = point_on_circle(angle, HOUR_NUMBER_RADIUS);
-            GRect  label_box    = GRect(label_centre.x - 16,
-                                        label_centre.y - 12, 32, 24);
+            GRect  label_box    = GRect(
+                label_centre.x - HOUR_LABEL_HALF_W,
+                label_centre.y - HOUR_LABEL_HALF_H,
+                HOUR_LABEL_HALF_W * 2,
+                HOUR_LABEL_HALF_H * 2);
 
             graphics_context_set_text_color(ctx, GColorWhite);
             graphics_draw_text(ctx, label, number_font, label_box,
@@ -356,6 +415,16 @@ static void update_sunrise_sunset_display(void) {
              s_sunrise_minutes / 60, s_sunrise_minutes % 60,
              s_sunset_minutes  / 60, s_sunset_minutes  % 60);
     text_layer_set_text(s_sunrise_sunset_layer, buffer);
+}
+
+static void update_date_display(void) {
+    time_t    now  = time(NULL);
+    struct tm *t   = localtime(&now);
+    if (!t) return;
+
+    static char buffer[11];
+    strftime(buffer, sizeof(buffer), "%d.%m.%Y", t);
+    text_layer_set_text(s_date_layer, buffer);
 }
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
@@ -431,19 +500,20 @@ static void main_window_load(Window *window) {
     layer_add_child(root, s_canvas_layer);
 
     // Large digital clock in the centre
-    int time_y = s_center.y - 26;
-    s_time_layer = text_layer_create(GRect(0, time_y, bounds.size.w, 50));
+    int time_y = s_center.y - TIME_Y_OFFSET;
+    s_time_layer = text_layer_create(
+        GRect(0, time_y, bounds.size.w, TIME_LAYER_HEIGHT));
     text_layer_set_background_color(s_time_layer, GColorClear);
     text_layer_set_text_color(s_time_layer, GColorWhite);
     text_layer_set_font(s_time_layer,
-        fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS));
+        fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
     text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
     layer_add_child(root, text_layer_get_layer(s_time_layer));
 
     // Small sunrise/sunset readout below the clock
-    int info_y = time_y + 44;
+    int info_y = time_y + INFO_Y_GAP;
     s_sunrise_sunset_layer = text_layer_create(
-        GRect(0, info_y, bounds.size.w, 20));
+        GRect(0, info_y, bounds.size.w, INFO_LAYER_HEIGHT));
     text_layer_set_background_color(s_sunrise_sunset_layer, GColorClear);
     text_layer_set_text_color(s_sunrise_sunset_layer, GColorLightGray);
     text_layer_set_font(s_sunrise_sunset_layer,
@@ -452,7 +522,20 @@ static void main_window_load(Window *window) {
         GTextAlignmentCenter);
     layer_add_child(root, text_layer_get_layer(s_sunrise_sunset_layer));
 
+    // Date layer
+    int date_info_y = time_y - DATE_Y_OFFSET;
+    s_date_layer = text_layer_create(
+        GRect(0, date_info_y, bounds.size.w, DATE_LAYER_HEIGHT));
+    text_layer_set_background_color(s_date_layer, GColorClear);
+    text_layer_set_text_color(s_date_layer, GColorLightGray);
+    text_layer_set_font(s_date_layer,
+        fonts_get_system_font(FONT_KEY_GOTHIC_18));
+    text_layer_set_text_alignment(s_date_layer,
+        GTextAlignmentCenter);
+    layer_add_child(root, text_layer_get_layer(s_date_layer));
+
     update_sunrise_sunset_display();
+    update_date_display();
     update_time_display();
 }
 
@@ -486,7 +569,7 @@ static void init(void) {
     app_message_register_inbox_dropped(on_message_dropped);
     app_message_register_outbox_failed(on_send_failed);
     app_message_register_outbox_sent(on_send_succeeded);
-    app_message_open(256, 64);
+    app_message_open(APPMSG_INBOX_SIZE, APPMSG_OUTBOX_SIZE);
 }
 
 static void deinit(void) {
