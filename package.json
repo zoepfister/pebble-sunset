@@ -10,7 +10,7 @@
     "uuid": "0aa92097-af58-49c1-8c6c-b97ce84d98ab",
     "sdkVersion": "3",
     "enableMultiJS": true,
-    "targetPlatforms": ["gabbro"],
+    "targetPlatforms": ["gabbro", "chalk", "basalt", "emery", "flint"],
     "capabilities": ["location"],
     "messageKeys": [
       "SUNRISE_HOUR",
