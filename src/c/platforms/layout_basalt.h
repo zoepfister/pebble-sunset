@@ -6,13 +6,13 @@
 // Scaled from emery by 72/100 ≈ 0.72
 
 // Dial geometry (radii from screen center)
-#define HOUR_NUMBER_RADIUS       61
-#define TICK_OUTER_RADIUS        78
+#define HOUR_NUMBER_RADIUS       60
+#define TICK_OUTER_RADIUS        72
 #define TICK_INNER_EVEN_RADIUS   71
-#define TICK_INNER_ODD_RADIUS    75
-#define SKY_DISC_INSET            0
+#define TICK_INNER_ODD_RADIUS    72
+#define SKY_DISC_INSET            1
 #define SUN_DOT_ORBIT_RADIUS     55
-#define SUN_DOT_RADIUS            6
+#define SUN_DOT_RADIUS            4
 #define CENTER_DISC_RADIUS       35
 
 // Hour label bounding box (half-extents)

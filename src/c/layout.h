@@ -23,8 +23,8 @@
 // Sun/moon indicator ring sizes
 #define SUN_GLOW_EXTRA           2
 #define SUN_CORE_INSET           4
-#define MOON_OUTER_INSET         2
-#define MOON_INNER_INSET         5
+#define MOON_OUTER_INSET         1
+#define MOON_INNER_INSET         6
 
 // Centre disc inner ring offset
 #define CENTER_DISC_INNER_INSET  0
