@@ -1,0 +1,107 @@
+name: Build & Release
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build PBWs
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt install -y nodejs npm libsdl1.2debian libfdt1 libsdl2-2.0-0 libpixman-1-0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install pebble-tool
+        run: uv tool install pebble-tool --python 3.13
+
+      - name: Cache Pebble SDK
+        id: cache-pebble-sdk
+        uses: actions/cache@v4
+        with:
+          path: ~/.pebble-sdk
+          key: pebble-sdk-latest-${{ runner.os }}
+
+      - name: Install Pebble SDK
+        if: steps.cache-pebble-sdk.outputs.cache-hit != 'true'
+        run: yes | pebble sdk install latest
+
+      - name: Install npm dependencies
+        run: npm install
+
+      - name: Read app metadata
+        id: app
+        run: |
+          VERSION=$(jq -r '.version' package.json)
+          NAME=$(jq -r '.name' package.json)
+          DISPLAY_NAME=$(jq -r '.pebble.displayName // .name' package.json)
+          PLATFORMS=$(jq -r '.pebble.targetPlatforms | join(" ")' package.json)
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "name=${NAME}" >> "$GITHUB_OUTPUT"
+          echo "display_name=${DISPLAY_NAME}" >> "$GITHUB_OUTPUT"
+          echo "platforms=${PLATFORMS}" >> "$GITHUB_OUTPUT"
+          echo "Building ${DISPLAY_NAME} v${VERSION} for: ${PLATFORMS}"
+
+      - name: Backup original package.json
+        run: cp package.json package.json.bak
+
+      - name: Build universal PBW (all platforms)
+        run: |
+          pebble clean
+          pebble build
+          mkdir -p dist
+          cp build/*.pbw "dist/${{ steps.app.outputs.name }}-${{ steps.app.outputs.version }}.pbw"
+
+      - name: Build per-platform PBWs
+        run: |
+          for platform in ${{ steps.app.outputs.platforms }}; do
+            echo "::group::Building for ${platform}"
+            jq --arg p "${platform}" '.pebble.targetPlatforms = [$p]' package.json.bak > package.json
+            pebble clean
+            pebble build
+            cp build/*.pbw "dist/${{ steps.app.outputs.name }}-${{ steps.app.outputs.version }}-${platform}.pbw"
+            echo "::endgroup::"
+          done
+
+      - name: Restore original package.json
+        if: always()
+        run: mv package.json.bak package.json
+
+      - name: List artifacts
+        run: ls -lh dist/
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pbws-${{ steps.app.outputs.version }}
+          path: dist/*.pbw
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ steps.app.outputs.display_name }} ${{ github.ref_name }}
+          generate_release_notes: true
+          files: dist/*.pbw
