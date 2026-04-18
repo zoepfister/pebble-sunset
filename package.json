@@ -12,7 +12,7 @@
   "pebble": {
     "displayName": "Sunset",
     "uuid": "0aa92097-af58-49c1-8c6c-b97ce84d98ab",
-    "sdkVersion": "3",
+    "sdkVersion": "4",
     "enableMultiJS": true,
     "targetPlatforms": [
       "gabbro",
