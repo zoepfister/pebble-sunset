@@ -1,40 +1,70 @@
-# Sunset - A Solar Dial inspired Watchface for Pebble.
+<div align="center">
+
+# Sunset
+
+### A Solar Dial inspired watchface for Pebble
+
+[![Pebble App Store](https://img.shields.io/badge/Pebble-App_Store-ff6900?style=for-the-badge&logo=pebble&logoColor=white)](https://apps.repebble.com/42cab49dbb4d4b26bb981ecb)
+![Language](https://img.shields.io/badge/Built_with-C-a8b9cc?style=for-the-badge&logo=c&logoColor=white)
+![Platforms](https://img.shields.io/badge/Platforms-5-6c5ce7?style=for-the-badge)
+
+*Track the sun across a 24-hour dial — daylight, twilight, and night at a glance.*
+
+</div>
+
+---
 
 <table align="center">
   <tr>
     <td align="center" valign="middle">
-      <img src="screenshots/gabbro_1.0_20260418-135124.gif" alt="Gabbro Screenshot" width="180"/><br/>
-      <b>Gabbro</b>
+      <img src="screenshots/gabbro_1.0_20260418-135124.gif" alt="Gabbro" width="170"/><br/>
+      <sub><b>Gabbro</b></sub>
     </td>
     <td align="center" valign="middle">
-      <img src="screenshots/emery_1.0_20260418-135207.gif" alt="Emery Screenshot" width="180"/><br/>
-      <b>Emery</b>
+      <img src="screenshots/emery_1.0_20260418-135207.gif" alt="Emery" width="170"/><br/>
+      <sub><b>Emery</b></sub>
     </td>
     <td align="center" valign="middle">
-      <img src="screenshots/basalt_1.0_20260418-135151.gif" alt="Basalt Screenshot" width="180"/><br/>
-      <b>Basalt</b>
+      <img src="screenshots/basalt_1.0_20260418-135151.gif" alt="Basalt" width="170"/><br/>
+      <sub><b>Basalt</b></sub>
+    </td>
+    <td align="center" valign="middle">
+      <img src="screenshots/chalk_1.0_20260418-135138.gif" alt="Chalk" width="170"/><br/>
+      <sub><b>Chalk</b></sub>
+    </td>
+    <td align="center" valign="middle">
+      <img src="screenshots/flint_1.0_20260418-135221.gif" alt="Flint" width="170"/><br/>
+      <sub><b>Flint</b></sub>
     </td>
   </tr>
 </table>
 
-Install via the [Pebble App Store](https://apps.repebble.com/42cab49dbb4d4b26bb981ecb).
+---
 
-As part of the [Spring 2026 Pebble App Contest](https://repebble.com/blog/spring-2026-pebble-app-contest), I built this watchface as a proof of concept. It displays the current sunset and sunrise times, and the current time in a style similar to the [Solar Dial watchface designed by Apple](https://support.apple.com/guide/watch/faces-and-features-apde9218b440/watchos#apd348fe40c5).
+## About
 
-Since I did not have experience with Pebble development, I used the Claude Skill provided by Pebble to generate the basis of this app. The app is written in C, though I reccon using JavaScript would be the more modern approach.
+Built motivated by the [Spring 2026 Pebble App Contest](https://repebble.com/blog/spring-2026-pebble-app-contest) as a proof of concept. Sunset is inspired by the [Solar Dial watchface on Apple Watch](https://support.apple.com/guide/watch/faces-and-features-apde9218b440/watchos#apd348fe40c5) and maps a full day onto a single 24-hour analog face — so you can *see* where you are in the day relative to sunrise and sunset.
+
+> I had no prior Pebble experience, so I used the official Pebble Claude Skill to scaffold the project. It's written in C; a modern JavaScript (ALLOY) rewrite would probably be preferable.
 
 ## Features
 
-- Displays the current sunset and sunrise times either via location services or via user input of latitude and longitude. I used the https://api.open-meteo.com API to get the sunset and sunrise times.
-- Displays a 24-hour clock face with a sun/moon that moves around the clock face based on the current time.
-- Colored arcs represent the daylight, twilight, and nighttime periods.
-- The time is additionally displayed in 24h format in the center of the watchface.
-- The date is displayed above the digital time display.
-- The sunrise and sunset times are displayed under the digital time display.
+- **24-hour dial** with a sun/moon indicator that orbits the face throughout the day
+- **Colored arcs** distinguish daylight, twilight, and night at a glance
+- **Sunrise & sunset times** fetched from [open-meteo.com](https://api.open-meteo.com) — via location services or manual lat/lon
+- **Digital time** in 24h format, centered on the face
+- **Date** above the digital time
+- **Sunrise & sunset times** displayed below the digital time
+- Runs on **Gabbro, Emery, Basalt, Chalk, and Flint**
 
-## Open Issues
+## Install
 
-Pull requests are welcome. Here are some of the open issues:
-- [] The digital time display sometimes goes out of the center circle.
-- [] I'd like to add a calculation to determine sunrise and sunset without using the open-meteo API.
-- [] Icons, and a store wallpaper would be nice.
+Grab it from the [Pebble App Store](https://apps.repebble.com/42cab49dbb4d4b26bb981ecb).
+
+## Roadmap
+
+Pull requests are very welcome.
+
+- [ ] Keep the digital time display from drifting outside the center circle
+- [ ] Compute sunrise/sunset locally instead of relying on open-meteo
+- [ ] App icon and store wallpaper
