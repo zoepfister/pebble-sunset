@@ -71,9 +71,11 @@ void time_display_create_round(Layer *root, GRect bounds, GPoint center) {
 }
 
 void time_display_create(Layer *root, GRect bounds, GPoint center) {
-    #ifdef PBL_RECT
+    #ifdef LAYOUT_BASALT
         time_display_create_rect(root, bounds, center);
     #else
+        APP_LOG(APP_LOG_LEVEL_INFO, "time_display_create: using round layout");
+   
         time_display_create_round(root, bounds, center);
     #endif
 }
@@ -100,7 +102,7 @@ void time_display_update_time(void) {
     struct tm *t  = localtime(&now);
     if (!t) return;
 
-    #ifdef PBL_RECT
+    #ifdef LAYOUT_BASALT
         static char buffer_top[3];
         static char buffer_bottom[3];
         strftime(buffer_top, sizeof(buffer_top), "%H", t);

@@ -5,17 +5,17 @@
 // Scaled from gabbro by 90/130 ≈ 0.69
 
 // Dial geometry (radii from screen center)
-#define HOUR_NUMBER_RADIUS       74
+#define HOUR_NUMBER_RADIUS       70
 #define TICK_OUTER_RADIUS        90
 #define TICK_INNER_EVEN_RADIUS   83
 #define TICK_INNER_ODD_RADIUS    87
 #define SKY_DISC_INSET            0
-#define SUN_DOT_ORBIT_RADIUS     55
+#define SUN_DOT_ORBIT_RADIUS     57
 #define SUN_DOT_RADIUS            5
-#define CENTER_DISC_RADIUS       39
+#define CENTER_DISC_RADIUS       44
 
 // Hour label bounding box (half-extents)
-#define HOUR_LABEL_HALF_W        14
+#define HOUR_LABEL_HALF_W        18
 #define HOUR_LABEL_HALF_H        10
 
 // Digital time text layout

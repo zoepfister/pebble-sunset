@@ -5,6 +5,8 @@
 // Also used as fallback for Diorite and Aplite.
 // Scaled from emery by 72/100 ≈ 0.72
 
+#define LAYOUT_BASALT 1
+
 // Dial geometry (radii from screen center)
 #define HOUR_NUMBER_RADIUS       60
 #define TICK_OUTER_RADIUS        72
