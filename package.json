@@ -1,7 +1,7 @@
 {
-  "name": "solar-24h",
+  "name": "sunset",
   "author": "Pebble Dev",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "keywords": [
     "pebble-app"
   ],
@@ -10,7 +10,7 @@
     "@rebble/clay": "^1.0.8"
   },
   "pebble": {
-    "displayName": "Solar 24H",
+    "displayName": "Sunset",
     "uuid": "0aa92097-af58-49c1-8c6c-b97ce84d98ab",
     "sdkVersion": "3",
     "enableMultiJS": true,
